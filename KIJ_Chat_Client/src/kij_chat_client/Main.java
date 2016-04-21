@@ -13,6 +13,8 @@ public class Main {
 
 	private final static int PORT = 6677;//SET A CONSTANT VARIABLE PORT
 	private final static String HOST = "localhost";//SET A CONSTANT VARIABLE HOST
+//        private final static String HOST = "10.151.xx.xx";    // jika jaringan
+        
 	
 	public static void main(String[] args) throws IOException
 	{

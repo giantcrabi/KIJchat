@@ -15,7 +15,7 @@ public class Client implements Runnable{
 
 	private Socket socket;//SOCKET INSTANCE VARIABLE
         private String username;
-        private boolean login = false;
+        private boolean login = false;  // jika sudah login, true
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
@@ -39,7 +39,7 @@ public class Client implements Runnable{
 			
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
-				if (in.hasNext())
+				if (in.hasNext()) // selama in punya token
 				{
 					String input = in.nextLine();//IF THERE IS INPUT THEN MAKE A NEW VARIABLE input AND READ WHAT THEY TYPED
 //					System.out.println("Client Said: " + input);//PRINT IT OUT TO THE SCREEN
@@ -50,13 +50,24 @@ public class Client implements Runnable{
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
                                             
-                                            if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {
+//                                            vals[0] = LOGIN
+//                                            vals[1] = username
+//                                            vals[2] = password
+
+                                            if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {  // jika userlist mengandung username & password (jika match)
                                                 if (this.login == false) {
                                                     this._loginlist.add(new Pair(this.socket, vals[1]));
                                                     this.username = vals[1];
                                                     this.login = true;
                                                     System.out.println("Users count: " + this._loginlist.size());
                                                     out.println("SUCCESS login");
+                                                    /* 
+                                                        jika sesuai diskusi, maka KEY pertama akan dikirimkan disini dengan kerangka kasar sbb:
+                                                        out.println("*01*" + KEY);
+                                                        dugaan saya, nanti di client terdapat if. jika terdapat token (katakan saja message daiwali dengan *01* maka
+                                                        message tersebut dianggap mengandung key dan akan langsung disimpan ke variable di client tanpa di print ke cmd.
+                                                        else, jika message dari server tidak mengandung token penting, maka langsung ditampilkan
+                                                    */
                                                     out.flush();
                                                 } else {
                                                     out.println("FAIL login");
@@ -99,12 +110,18 @@ public class Client implements Runnable{
                                                         messageOut += vals[j] + " ";
                                                     }
                                                     System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
+                                                    
+                                                    /*
+                                                        dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
+                                                    */
                                                     outDest.println(this.username + ": " + messageOut);
+                                                    
                                                     outDest.flush();
                                                     exist = true;
                                                 }
                                             }
                                             
+                                            // cmiiw jika message nya kosong, maka dikatakan failed
                                             if (exist == false) {
                                                 System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
                                                 out.println("FAIL pm");
@@ -112,18 +129,19 @@ public class Client implements Runnable{
                                             }
                                         }
                                         
-                                        // param CG <groupName>
+                                        // param CG <groupName> ; create group
                                         if (input.split(" ")[0].toLowerCase().equals("cg") == true) {
                                             String[] vals = input.split(" ");
                                             
                                             boolean exist = false;
                                             
-                                            for(Pair<String, String> selGroup : _grouplist) {
+                                            for(Pair<String, String> selGroup : _grouplist) {   // iterasi seluruh nama grup, jika grup sudah ada, tandai ada (exist)
                                                 if (selGroup.getFirst().equals(vals[1])) {
                                                     exist = true;
                                                 }
                                             }
                                             
+                                            // jika nggak ada, buatkan grup baru
                                             if(exist == false) {
                                                 Group group = new Group();
                                                 int total = group.updateGroup(vals[1], this.username, _grouplist);
@@ -138,7 +156,7 @@ public class Client implements Runnable{
                                             }
                                         }
                                         
-                                        // param GM <groupName> <message>
+                                        // param GM <groupName> <message> ; group message
                                         if (input.split(" ")[0].toLowerCase().equals("gm") == true) {
                                             String[] vals = input.split(" ");
                                             
@@ -161,6 +179,9 @@ public class Client implements Runnable{
                                                                     messageOut += vals[j] + " ";
                                                                 }
                                                                 System.out.println(this.username + " to " + vals[1] + " group: " + messageOut);
+                                                                /*
+                                                                    dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
+                                                                */
                                                                 outDest.println(this.username + " @ " + vals[1] + " group: " + messageOut);
                                                                 outDest.flush();
                                                             }
@@ -174,7 +195,7 @@ public class Client implements Runnable{
                                             }
                                         }
                                         
-                                        // param BM <message>
+                                        // param BM <message> ; broadcast message - karena broadcast jadi mungkin tidak perlu enkripsi (?) tp gakpapa juga buat kerahasiaan antar anggota
                                         if (input.split(" ")[0].toLowerCase().equals("bm") == true) {
                                             String[] vals = input.split(" ");
                                             
@@ -186,6 +207,9 @@ public class Client implements Runnable{
                                                         messageOut += vals[j] + " ";
                                                     }
                                                     System.out.println(this.username + " to alls: " + messageOut);
+                                                    /*
+                                                        dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
+                                                    */
                                                     outDest.println(this.username + " <BROADCAST>: " + messageOut);
                                                     outDest.flush();
                                                 }
