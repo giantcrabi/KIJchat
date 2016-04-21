@@ -6,4 +6,4 @@ Joshua Kevin Rachmadi		5113100059
 
 Gian Sebastian Anjasmara	5113100132
 
-Rahmat Nazali Salim		5113100167
+Rahmat Nazali Salimi		5113100167
