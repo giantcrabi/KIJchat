@@ -115,8 +115,9 @@ public class Client implements Runnable{
                                                         dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
                                                     */
                                                     outDest.println(this.username + ": " + messageOut);
-                                                    
+                                                    out.println(this.username + ": " + messageOut);     // kirim ke pengirim juga, untuk konfirmasi
                                                     outDest.flush();
+                                                    out.flush();
                                                     exist = true;
                                                 }
                                             }
@@ -182,8 +183,10 @@ public class Client implements Runnable{
                                                                 /*
                                                                     dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
                                                                 */
-                                                                outDest.println(this.username + " @ " + vals[1] + " group: " + messageOut);
+                                                                outDest.println (this.username + " @ " + vals[1] + " group: " + messageOut);
+                                                                out.println     (this.username + " @ " + vals[1] + " group: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
                                                                 outDest.flush();
+                                                                out.flush();
                                                             }
                                                         }
                                                     }
@@ -210,8 +213,10 @@ public class Client implements Runnable{
                                                     /*
                                                         dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
                                                     */
-                                                    outDest.println(this.username + " <BROADCAST>: " + messageOut);
+                                                    outDest.println (this.username + " <BROADCAST>: " + messageOut);
+                                                    out.println     (this.username + " <BROADCAST>: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
                                                     outDest.flush();
+                                                    out.flush();
                                                 }
                                             }
                                         }

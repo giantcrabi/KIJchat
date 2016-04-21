@@ -12,25 +12,25 @@ import java.util.Scanner;
 
 public class Client implements Runnable {
 
-	private Socket socket;//MAKE SOCKET INSTANCE VARIABLE
+	private Socket socket;  //MAKE SOCKET INSTANCE VARIABLE
         
         // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
         
 	public Client(Socket s)
 	{
-		socket = s;//INSTANTIATE THE INSTANCE VARIABLE
+		socket = s; //INSTANTIATE THE INSTANCE VARIABLE
                 log.add(String.valueOf("false"));
 	}
 	
 	@Override
-	public void run()//INHERIT THE RUN METHOD FROM THE Runnable INTERFACE
+	public void run()   //INHERIT THE RUN METHOD FROM THE Runnable INTERFACE
 	{
 		try
 		{
-                    Scanner chat = new Scanner(System.in);//GET THE INPUT FROM THE CMD
-                    Scanner in = new Scanner(socket.getInputStream());//GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
-                    PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
+                    Scanner chat = new Scanner(System.in);  //GET THE INPUT FROM THE CMD
+                    Scanner in = new Scanner(socket.getInputStream());  //GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
+                    PrintWriter out = new PrintWriter(socket.getOutputStream());    //GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
 
 //                    while (true)//WHILE THE PROGRAM IS RUNNING
 //                    {						
