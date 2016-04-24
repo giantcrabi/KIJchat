@@ -6,8 +6,11 @@
 package kij_chat_client;
 
 /*import java.net.Socket;*/
+import java.security.KeyFactory;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Scanner;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -36,7 +39,23 @@ public class Read implements Runnable {
 				if(this.in.hasNext()) {
                                                                    //IF THE SERVER SENT US SOMETHING
                                         input = this.in.nextLine();
-					System.out.println(input);//PRINT IT OUT
+                                        
+                                        // input disaring. message biasa atau ada encoding
+                                        if(input.split(" ")[0].toLowerCase().equals("[en]")){
+                                            // menerima public key terminta + decode stsring ke public key
+                                            String publicKeyString = this.in.nextLine().split(" ")[1];
+                                            byte[] publicBytes = Base64.decodeBase64(publicKeyString);
+                                            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                                            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                                            
+//                                            _clientPublicKey = keyFactory.generatePublic(keySpec);
+                                            System.out.println("Jawaban permintaan public key :\n" + keyFactory.generatePublic(keySpec).toString());
+                                        }
+                                        else{
+                                            System.out.println(input);//PRINT IT OUT
+                                        }
+					
+                                        // jika success login atau success logout
                                         if (input.split(" ")[0].toLowerCase().equals("success")) {
                                             if (input.split(" ")[1].toLowerCase().equals("logout")) {
                                                 keepGoing = false;
