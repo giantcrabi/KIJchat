@@ -42,12 +42,14 @@ public class Client implements Runnable {
 //                                    System.out.println(in.nextLine());//PRINT IT OUT
 //                    }
 
+                    DigitalSignature signature = new DigitalSignature();
+                    
                     Read reader = new Read(in, log);
 
                     Thread tr = new Thread(reader);
                     tr.start();
 
-                    Write writer = new Write(chat, out, log);
+                    Write writer = new Write(signature, chat, out, log);
 
                     Thread tw = new Thread(writer);
                     tw.start();
