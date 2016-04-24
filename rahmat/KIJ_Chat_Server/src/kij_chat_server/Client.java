@@ -5,6 +5,35 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+
+
+
+import javax.crypto.Cipher;
+
+//import java.util.Base64;
+//import sun.misc.BASE64Decoder;
+//import sun.misc.BASE64Encoder;
+
+import org.apache.commons.codec.binary.Base64; 
+
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
  * @author santen-suru
@@ -20,13 +49,20 @@ public class Client implements Runnable{
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
+        
+        // key list user
+        private ArrayList<Pair<String,PublicKey>> _keylist;
+        
+        private PublicKey _clientPublicKey;
+        
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, ArrayList<Pair<String,PublicKey>> _keylist)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
+                this._keylist = _keylist;       // terima key dari Main. key ini berisi privat dan public (ingat ini masih di server)
 	}
 	
 	@Override
@@ -37,6 +73,22 @@ public class Client implements Runnable{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
 			
+//                        // melakukan pembuatan key
+//                        KeyPair _clientkey = rsa.generateKey();
+//                        this._keylist.add(new Pair(this.username, _clientkey));
+//                        
+//                        // mengirimkan private key ke client + encode Private Key ke string
+//                        String publicK = Base64.encodeBase64String(_clientkey.getPrivate().getEncoded());
+//                        out.println(publicK);
+                        
+                        // menerima public key client + decode string ke public key
+                        String publicKeyString = in.nextLine();
+                        byte[] publicBytes = Base64.decodeBase64(publicKeyString);
+                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                        _clientPublicKey = keyFactory.generatePublic(keySpec);
+                        System.out.println("New public key recieved :\n" + _clientPublicKey.toString());
+
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
 				if (in.hasNext()) // selama in punya token
@@ -57,10 +109,13 @@ public class Client implements Runnable{
                                             if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {  // jika userlist mengandung username & password (jika match)
                                                 if (this.login == false) {
                                                     this._loginlist.add(new Pair(this.socket, vals[1]));
+                                                    // menambah daftar public key user
+                                                    this._keylist.add(new Pair(this.username, _clientPublicKey));
                                                     this.username = vals[1];
                                                     this.login = true;
                                                     System.out.println("Users count: " + this._loginlist.size());
                                                     out.println("SUCCESS login");
+                                                    
                                                     /* 
                                                         jika sesuai diskusi, maka KEY pertama akan dikirimkan disini dengan kerangka kasar sbb:
                                                         out.println("*01*" + KEY);
@@ -218,6 +273,34 @@ public class Client implements Runnable{
                                                     outDest.flush();
                                                     out.flush();
                                                 }
+                                            }
+                                        }
+                                        
+                                        // DEBUG : user A meminta public key milik B ke server; param PK <userName dst>
+                                        if (input.split(" ")[0].toLowerCase().equals("pk") == true) {
+                                            String[] vals = input.split(" ");
+                                            
+                                            boolean exist = false;
+                                            
+                                            
+                                            // mendapatkan socket yang sesuai
+                                            for(Pair<String, PublicKey> cur : _keylist) {
+                                                if (cur.getFirst().equals(vals[1])) {
+                                                    // mengirimkan public key terminta ke peminta + encode public Key terminta ke string
+                                                    String publicK = "[EN]";    // informasikan jika string merupakan hasil encoding dari public key
+                                                    publicK += Base64.encodeBase64String(cur.getSecond().getEncoded());  
+                                                    System.out.println(this.username + " want " + vals[1] + " public key :\n" + publicK);
+                                                    out.println(vals[1] + " public key :\n" + publicK);     // kirim balik
+                                                    out.flush();
+                                                    exist = true;
+                                                }
+                                            }
+                                            
+                                            // cmiiw jika public key nya kosong, maka dikatakan failed
+                                            if (exist == false) {
+                                                System.out.println("pk to " + vals[1] + " by " + this.username + " failed.");
+                                                out.println("FAIL pk");
+                                                out.flush();
                                             }
                                         }
 				}
