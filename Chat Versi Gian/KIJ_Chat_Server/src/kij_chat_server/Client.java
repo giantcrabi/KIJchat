@@ -41,6 +41,7 @@ public class Client implements Runnable{
 		{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
+                        String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
                         
                         out.println(counter);
                         out.flush();
@@ -58,7 +59,8 @@ public class Client implements Runnable{
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
                                             String realInput = vals[0] + " " + vals[1] + " " + vals[2];
-                                            boolean verified = signature.VerifySignature("../Public_Key_Directory/clientkey", Main.toByteArray(vals[3]), realInput);
+                                            
+                                            boolean verified = signature.VerifySignature(filepath, Main.toByteArray(vals[3]), realInput);
                                             System.out.println("Verified: " + verified);
                                             
 //                                            vals[0] = LOGIN

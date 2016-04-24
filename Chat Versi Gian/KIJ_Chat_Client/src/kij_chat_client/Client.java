@@ -1,5 +1,6 @@
 package kij_chat_client;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class Client implements Runnable {
                     Scanner chat = new Scanner(System.in);  //GET THE INPUT FROM THE CMD
                     Scanner in = new Scanner(socket.getInputStream());  //GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
                     PrintWriter out = new PrintWriter(socket.getOutputStream());    //GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
+                    int counter = in.nextInt();
+                    String tempfilepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
+                    String filepath = tempfilepath.replace('/','\\');
 
 //                    while (true)//WHILE THE PROGRAM IS RUNNING
 //                    {						
@@ -42,7 +46,7 @@ public class Client implements Runnable {
 //                                    System.out.println(in.nextLine());//PRINT IT OUT
 //                    }
 
-                    DigitalSignature signature = new DigitalSignature(in.nextInt());
+                    DigitalSignature signature = new DigitalSignature(counter);
                     
                     Read reader = new Read(in, log);
 
@@ -55,9 +59,12 @@ public class Client implements Runnable {
                     tw.start();
 
 //                        System.out.println(tr.isAlive());
-                    while (tr.isAlive() == true) {
+                    while (true) {
                         if (tr.isAlive() == false && tw.isAlive() == false) {
+                            File clientfile = new File(filepath);
+                            clientfile.delete();
                             socket.close();
+                            break;
                         }
                     }
 		}
