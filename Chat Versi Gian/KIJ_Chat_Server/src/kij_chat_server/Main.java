@@ -24,6 +24,7 @@ public class Main {
             {
                     final int PORT = 6677;//SET NEW CONSTANT VARIABLE: PORT
                     ServerSocket server = new ServerSocket(PORT); //SET PORT NUMBER
+                    DigitalSignature signature = new DigitalSignature();
                     System.out.println("Waiting for clients...");//AT THE START PRINT THIS
 
                     while (true)//WHILE THE PROGRAM IS RUNNING
@@ -32,7 +33,7 @@ public class Main {
 
                             System.out.println("Client connected from " + s.getLocalAddress().getHostName());	//	TELL THEM THAT THE CLIENT CONNECTED
 
-                            Client chat = new Client(s, _loginlist, _userlist, _grouplist);//CREATE A NEW CLIENT OBJECT
+                            Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature);//CREATE A NEW CLIENT OBJECT
                             Thread t = new Thread(chat);//MAKE A NEW THREAD
                             t.start();//START THE THREAD
                     }
@@ -42,6 +43,14 @@ public class Main {
                     System.out.println("An error occured.");//IF AN ERROR OCCURED THEN PRINT IT
                     e.printStackTrace();
             }
+    }
+    static String bytes2String(byte[] bytes) {
+         StringBuilder string = new StringBuilder();
+         for (byte b : bytes) {
+             String hexString = Integer.toHexString(0x00FF & b);
+             string.append(hexString.length() == 1 ? "0" + hexString : hexString);
+         }
+         return string.toString();
     }
 
 }

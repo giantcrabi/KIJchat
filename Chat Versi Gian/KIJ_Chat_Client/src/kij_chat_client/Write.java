@@ -66,14 +66,17 @@ public class Write implements Runnable {
 			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
 			{						
 				String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
+                                String sig = Main.bytes2String(signature.GenerateSignatures(input));
                                 System.out.println("Input data: " + input);
-                                System.out.println("Signature: " + Main.bytes2String(signature.generateSignatures(input)));
+                                System.out.println("Signature: " + sig);
                                 /*
                                 System.out.println("Digest: " + bytes2String(digest));
                                 System.out.println("Cipher text: " + bytes2String(cipherText));
                                 */
                                 
-				out.println(input);//SEND IT TO THE SERVER
+                                String concate = input + " " + sig;
+                                
+				out.println(concate);//SEND IT TO THE SERVER
 				out.flush();//FLUSH THE STREAM
                                 
                                 if (input.contains("logout")) {
