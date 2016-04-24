@@ -46,19 +46,6 @@ public class Client implements Runnable {
                     // pembuatan key RSA, lalu public key dikirimkan ke server
                     _clientkey = rsa.generateKey();
 
-<<<<<<< HEAD:KIJ_Chat_Client/src/kij_chat_client/Client.java
-//                    while (true)//WHILE THE PROGRAM IS RUNNING
-//                    {						
-//                            String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
-//                            out.println(input);//SEND IT TO THE SERVER
-//                            out.flush();//FLUSH THE STREAM
-//
-//                            if(in.hasNext())//IF THE SERVER SENT US SOMETHING
-//                                    System.out.println(in.nextLine());//PRINT IT OUT
-//                    }
-
-                    DigitalSignature signature = new DigitalSignature();
-=======
                     // mengirimkan public key ke server + encode public Key ke string
                     String publicK = Base64.encodeBase64String(_clientkey.getPublic().getEncoded());
                     out.println(publicK);
@@ -78,14 +65,13 @@ public class Client implements Runnable {
 //                    System.out.println("a");
 //                    System.out.println("Public Key server :\n" + clientPrivateKey.toString());
 //                    System.out.println("a");
->>>>>>> 2d9aabb0fd974cf5790ce7aa5212f5476a188385:rahmat/KIJ_Chat_Client/src/kij_chat_client/Client.java
                     
                     Read reader = new Read(in, log);
 
                     Thread tr = new Thread(reader);
                     tr.start();
 
-                    Write writer = new Write(signature, chat, out, log);
+                    Write writer = new Write(chat, out, log);
 
                     Thread tw = new Thread(writer);
                     tw.start();

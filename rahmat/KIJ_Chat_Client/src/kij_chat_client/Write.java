@@ -28,7 +28,6 @@ public class Write implements Runnable {
 	private Scanner chat;
         private PrintWriter out;
         boolean keepGoing = true;
-        private DigitalSignature signature;
         ArrayList<String> log;
         /*
         KeyPair keyPair;
@@ -51,11 +50,10 @@ public class Write implements Runnable {
 	}
         */
         
-        public Write(DigitalSignature signature, Scanner chat, PrintWriter out, ArrayList<String> log){
+        public Write(Scanner chat, PrintWriter out, ArrayList<String> log){
             this.chat = chat;
             this.out = out;
             this.log = log;
-            this.signature = signature;
         }
 	
 	@Override
@@ -66,8 +64,9 @@ public class Write implements Runnable {
 			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
 			{						
 				String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
+                                DigitalSignature signature = new DigitalSignature(input);
                                 System.out.println("Input data: " + input);
-                                System.out.println("Signature: " + Main.bytes2String(signature.generateSignatures(input)));
+                                System.out.println("Signature: " + Main.bytes2String(signature.generateSignatures()));
                                 /*
                                 System.out.println("Digest: " + bytes2String(digest));
                                 System.out.println("Cipher text: " + bytes2String(cipherText));
