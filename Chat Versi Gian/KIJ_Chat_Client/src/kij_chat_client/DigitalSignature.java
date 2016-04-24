@@ -13,8 +13,7 @@ import java.security.*;
  * @author DELL
  */
 public class DigitalSignature {
-    
-    private String input;
+   
     private KeyPairGenerator keyGen;
     private SecureRandom random;
     private KeyPair pair;
@@ -39,8 +38,7 @@ public class DigitalSignature {
         }
     }
     
-    public byte[] generateSignatures(String input) {
-        this.input = input;
+    public byte[] GenerateSignatures(String input) {
         byte[] realSig = null;
         try {
             Signature rsa = Signature.getInstance("SHA512withRSA"); //gets a Signature object for generating or verifying signatures using the RSA algorithm

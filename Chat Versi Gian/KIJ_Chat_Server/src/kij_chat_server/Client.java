@@ -16,17 +16,19 @@ public class Client implements Runnable{
 	private Socket socket;//SOCKET INSTANCE VARIABLE
         private String username;
         private boolean login = false;  // jika sudah login, true
+        private DigitalSignature signature;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, DigitalSignature signature)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
+                this.signature = signature;
 	}
 	
 	@Override
@@ -49,6 +51,8 @@ public class Client implements Runnable{
                                         // param LOGIN <userName> <pass>
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
+                                            boolean verified = signature.VerifySignature("../Public_Key_Directory/clientkey", vals[3].getBytes(), input);
+                                            System.out.println("Verified: " + verified);
                                             
 //                                            vals[0] = LOGIN
 //                                            vals[1] = username
