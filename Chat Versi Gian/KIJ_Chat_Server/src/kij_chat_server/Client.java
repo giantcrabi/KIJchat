@@ -51,7 +51,8 @@ public class Client implements Runnable{
                                         // param LOGIN <userName> <pass>
                                         if (input.split(" ")[0].toLowerCase().equals("login") == true) {
                                             String[] vals = input.split(" ");
-                                            boolean verified = signature.VerifySignature("../Public_Key_Directory/clientkey", vals[3].getBytes(), input);
+                                            String realInput = vals[0] + " " + vals[1] + " " + vals[2];
+                                            boolean verified = signature.VerifySignature("../Public_Key_Directory/clientkey", Main.toByteArray(vals[3]), realInput);
                                             System.out.println("Verified: " + verified);
                                             
 //                                            vals[0] = LOGIN

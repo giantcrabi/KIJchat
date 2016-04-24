@@ -66,7 +66,7 @@ public class Write implements Runnable {
 			while (keepGoing)//WHILE THE PROGRAM IS RUNNING
 			{						
 				String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
-                                String sig = Main.bytes2String(signature.GenerateSignatures(input));
+                                String sig = Main.toHexString(signature.GenerateSignatures(input));
                                 System.out.println("Input data: " + input);
                                 System.out.println("Signature: " + sig);
                                 /*

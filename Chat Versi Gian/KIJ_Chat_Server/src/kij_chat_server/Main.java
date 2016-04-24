@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import javax.xml.bind.DatatypeConverter;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -44,13 +45,13 @@ public class Main {
                     e.printStackTrace();
             }
     }
-    static String bytes2String(byte[] bytes) {
-         StringBuilder string = new StringBuilder();
-         for (byte b : bytes) {
-             String hexString = Integer.toHexString(0x00FF & b);
-             string.append(hexString.length() == 1 ? "0" + hexString : hexString);
-         }
-         return string.toString();
+    
+    static String toHexString(byte[] array) {
+        return DatatypeConverter.printHexBinary(array);
+    }
+
+    static byte[] toByteArray(String s) {
+        return DatatypeConverter.parseHexBinary(s);
     }
 
 }
