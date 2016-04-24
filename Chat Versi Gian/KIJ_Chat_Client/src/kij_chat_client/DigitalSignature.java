@@ -20,7 +20,7 @@ public class DigitalSignature {
     private PrivateKey privKey;
     private PublicKey pubKey;
     
-    public DigitalSignature(){
+    public DigitalSignature(int counter){
         try {
             keyGen = KeyPairGenerator.getInstance("RSA"); //Create a Key Pair Generator using RSA algorithm
             random = SecureRandom.getInstance("SHA1PRNG");
@@ -29,8 +29,9 @@ public class DigitalSignature {
             privKey = pair.getPrivate();
             pubKey = pair.getPublic();
 
+            String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
             byte[] key = pubKey.getEncoded();
-            FileOutputStream keyfos = new FileOutputStream("../Public_Key_Directory/clientkey");
+            FileOutputStream keyfos = new FileOutputStream(filepath);
             keyfos.write(key);
             keyfos.close();
         } catch (Exception e) {

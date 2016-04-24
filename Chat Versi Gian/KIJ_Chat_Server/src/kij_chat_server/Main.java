@@ -19,6 +19,7 @@ public class Main {
     public static final ArrayList<Pair<String,String>> _userlist = user.getUserList();
     public static final Group group = new Group();
     public static final ArrayList<Pair<String,String>> _grouplist = group.getGroupList();
+    private static int counter = 0;
 
     public static void main(String[] args) throws IOException {
             try 
@@ -33,8 +34,9 @@ public class Main {
                             Socket s = server.accept();//ACCEPT SOCKETS(CLIENTS) TRYING TO CONNECT
 
                             System.out.println("Client connected from " + s.getLocalAddress().getHostName());	//	TELL THEM THAT THE CLIENT CONNECTED
-
-                            Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature);//CREATE A NEW CLIENT OBJECT
+                            counter += 1;
+                            
+                            Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature, counter);//CREATE A NEW CLIENT OBJECT
                             Thread t = new Thread(chat);//MAKE A NEW THREAD
                             t.start();//START THE THREAD
                     }

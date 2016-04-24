@@ -42,7 +42,7 @@ public class Client implements Runnable {
 //                                    System.out.println(in.nextLine());//PRINT IT OUT
 //                    }
 
-                    DigitalSignature signature = new DigitalSignature();
+                    DigitalSignature signature = new DigitalSignature(in.nextInt());
                     
                     Read reader = new Read(in, log);
 

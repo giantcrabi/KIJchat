@@ -17,18 +17,21 @@ public class Client implements Runnable{
         private String username;
         private boolean login = false;  // jika sudah login, true
         private DigitalSignature signature;
+        private int counter;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, DigitalSignature signature)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, 
+                DigitalSignature signature, int counter)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
                 this.signature = signature;
+                this.counter = counter;
 	}
 	
 	@Override
@@ -38,6 +41,9 @@ public class Client implements Runnable{
 		{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
+                        
+                        out.println(counter);
+                        out.flush();
 			
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
