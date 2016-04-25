@@ -2,6 +2,7 @@ package kij_chat_client;
 
 import java.io.IOException;
 import java.net.Socket;
+import javax.xml.bind.DatatypeConverter;
 import static javafx.application.Platform.exit;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
@@ -38,13 +39,12 @@ public class Main {
 		}
 	}
         
-        static String bytes2String(byte[] bytes) {
-            StringBuilder string = new StringBuilder();
-            for (byte b : bytes) {
-                String hexString = Integer.toHexString(0x00FF & b);
-                string.append(hexString.length() == 1 ? "0" + hexString : hexString);
-            }
-            return string.toString();
+        static String toHexString(byte[] array) {
+            return DatatypeConverter.printHexBinary(array);
+        }
+
+        static byte[] toByteArray(String s) {
+            return DatatypeConverter.parseHexBinary(s);
         }
 }
 

@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.StringJoiner;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -17,18 +18,21 @@ public class Client implements Runnable{
         private String username;
         private boolean login = false;  // jika sudah login, true
         private DigitalSignature signature;
+        private int counter;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, DigitalSignature signature)
+	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, 
+                DigitalSignature signature, int counter)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
                 this.signature = signature;
+                this.counter = counter;
 	}
 	
 	@Override
@@ -38,6 +42,12 @@ public class Client implements Runnable{
 		{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
+                        String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
+                        String sig;
+                        String concate;
+                        
+                        out.println(counter);
+                        out.flush();
 			
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
@@ -48,181 +58,210 @@ public class Client implements Runnable{
 //					out.println("You Said: " + input);//RESEND IT TO THE CLIENT
 //					out.flush();//FLUSH THE STREAM
                                         
-                                        // param LOGIN <userName> <pass>
-                                        if (input.split(" ")[0].toLowerCase().equals("login") == true) {
-                                            String[] vals = input.split(" ");
-                                            boolean verified = signature.VerifySignature("../Public_Key_Directory/clientkey", vals[3].getBytes(), input);
-                                            System.out.println("Verified: " + verified);
-                                            
-//                                            vals[0] = LOGIN
-//                                            vals[1] = username
-//                                            vals[2] = password
+                                        String[] inputs = input.split(" ");
+                                        String realInput;
+                                        boolean verified = false;
+                                        
+                                        if(input.length() > 0){
+                                            if(inputs.length <= 2){
+                                                realInput = inputs[0];
+                                            }else{
+                                                StringJoiner joiner = new StringJoiner(" ");
+                                                for(int i = 0; i<inputs.length - 1; i++){
+                                                    joiner.add(inputs[i]);
+                                                }
+                                                realInput = joiner.toString();
+                                            }
 
-                                            if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {  // jika userlist mengandung username & password (jika match)
-                                                if (this.login == false) {
-                                                    this._loginlist.add(new Pair(this.socket, vals[1]));
-                                                    this.username = vals[1];
-                                                    this.login = true;
-                                                    System.out.println("Users count: " + this._loginlist.size());
-                                                    out.println("SUCCESS login");
-                                                    /* 
-                                                        jika sesuai diskusi, maka KEY pertama akan dikirimkan disini dengan kerangka kasar sbb:
-                                                        out.println("*01*" + KEY);
-                                                        dugaan saya, nanti di client terdapat if. jika terdapat token (katakan saja message daiwali dengan *01* maka
-                                                        message tersebut dianggap mengandung key dan akan langsung disimpan ke variable di client tanpa di print ke cmd.
-                                                        else, jika message dari server tidak mengandung token penting, maka langsung ditampilkan
-                                                    */
-                                                    out.flush();
-                                                } else {
-                                                    out.println("FAIL login");
-                                                    out.flush();
-                                                }
-                                            } else {
-                                                out.println("FAIL login");
-                                                out.flush();
-                                            }
+                                            verified = signature.VerifySignature(filepath, Main.toByteArray(inputs[inputs.length - 1]), realInput);
+                                            System.out.println("Verified: " + verified);
                                         }
                                         
-                                        // param LOGOUT
-                                        if (input.split(" ")[0].toLowerCase().equals("logout") == true) {
-                                            String[] vals = input.split(" ");
-                                            
-                                            if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
-                                                this._loginlist.remove(new Pair(this.socket, this.username));
-                                                System.out.println(this._loginlist.size());
-                                                out.println("SUCCESS logout");
-                                                out.flush();
-                                                this.socket.close();
-                                                break;
-                                            } else {
-                                                out.println("FAIL logout");
-                                                out.flush();
-                                            }
-                                        }
-                                        
-                                        // param PM <userName dst> <message>
-                                        if (input.split(" ")[0].toLowerCase().equals("pm") == true) {
-                                            String[] vals = input.split(" ");
-                                            
-                                            boolean exist = false;
-                                            
-                                            for(Pair<Socket, String> cur : _loginlist) {
-                                                if (cur.getSecond().equals(vals[1])) {
-                                                    PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
-                                                    String messageOut = "";
-                                                    for (int j = 2; j<vals.length; j++) {
-                                                        messageOut += vals[j] + " ";
+                                        if(verified == true){
+                                            // param LOGIN <userName> <pass>
+                                            if (input.split(" ")[0].toLowerCase().equals("login") == true) {
+                                                String[] vals = input.split(" ");
+
+    //                                            vals[0] = LOGIN
+    //                                            vals[1] = username
+    //                                            vals[2] = password
+
+                                                if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {  // jika userlist mengandung username & password (jika match)
+                                                    if (this.login == false) {
+                                                        this._loginlist.add(new Pair(this.socket, vals[1]));
+                                                        this.username = vals[1];
+                                                        this.login = true;
+                                                        System.out.println("Users count: " + this._loginlist.size());
+                                                        sig = Main.toHexString(signature.GenerateSignature("SUCCESS login"));
+                                                        concate = "SUCCESS login" + " " + sig;
+                                                    } else {
+                                                        sig = Main.toHexString(signature.GenerateSignature("FAIL login"));
+                                                        concate = "FAIL login" + " " + sig;
                                                     }
-                                                    System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
+                                                } else {
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL login"));
+                                                    concate = "FAIL login" + " " + sig;
                                                     
-                                                    /*
-                                                        dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                    */
-                                                    outDest.println(this.username + ": " + messageOut);
-                                                    out.println(this.username + ": " + messageOut);     // kirim ke pengirim juga, untuk konfirmasi
-                                                    outDest.flush();
+                                                }
+                                                out.println(concate);
+                                                out.flush();
+                                            }
+
+                                            // param LOGOUT
+                                            if (input.split(" ")[0].toLowerCase().equals("logout") == true) {
+                                                String[] vals = input.split(" ");
+
+                                                if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
+                                                    this._loginlist.remove(new Pair(this.socket, this.username));
+                                                    System.out.println(this._loginlist.size());
+                                                    sig = Main.toHexString(signature.GenerateSignature("SUCCESS logout"));
+                                                    concate = "SUCCESS logout" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
-                                                    exist = true;
+                                                    this.socket.close();
+                                                    break;
+                                                } else {
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL logout"));
+                                                    concate = "FAIL logout" + " " + sig;
+                                                    out.println(concate);
+                                                    out.flush();
                                                 }
                                             }
-                                            
-                                            // cmiiw jika message nya kosong, maka dikatakan failed
-                                            if (exist == false) {
-                                                System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL pm");
-                                                out.flush();
-                                            }
-                                        }
-                                        
-                                        // param CG <groupName> ; create group
-                                        if (input.split(" ")[0].toLowerCase().equals("cg") == true) {
-                                            String[] vals = input.split(" ");
-                                            
-                                            boolean exist = false;
-                                            
-                                            for(Pair<String, String> selGroup : _grouplist) {   // iterasi seluruh nama grup, jika grup sudah ada, tandai ada (exist)
-                                                if (selGroup.getFirst().equals(vals[1])) {
-                                                    exist = true;
+
+                                            // param PM <userName dst> <message>
+                                            if (input.split(" ")[0].toLowerCase().equals("pm") == true) {
+                                                String[] vals = input.split(" ");
+
+                                                boolean exist = false;
+
+                                                for(Pair<Socket, String> cur : _loginlist) {
+                                                    if (cur.getSecond().equals(vals[1])) {
+                                                        PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
+                                                        String messageOut = "";
+                                                        for (int j = 2; j<vals.length - 1; j++) {
+                                                            messageOut += vals[j] + " ";
+                                                        }
+                                                        System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
+
+                                                        /*
+                                                            dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
+                                                        */
+                                                        sig = Main.toHexString(signature.GenerateSignature(this.username + ": " + messageOut));
+                                                        concate = this.username + ": " + messageOut + " " + sig;
+                                                        outDest.println(concate);
+                                                        out.println(concate);     // kirim ke pengirim juga, untuk konfirmasi
+                                                        outDest.flush();
+                                                        out.flush();
+                                                        exist = true;
+                                                    }
+                                                }
+
+                                                // cmiiw jika message nya kosong, maka dikatakan failed
+                                                if (exist == false) {
+                                                    System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL pm"));
+                                                    concate = "FAIL pm" + " " + sig;
+                                                    out.println(concate);
+                                                    out.flush();
                                                 }
                                             }
-                                            
-                                            // jika nggak ada, buatkan grup baru
-                                            if(exist == false) {
-                                                Group group = new Group();
-                                                int total = group.updateGroup(vals[1], this.username, _grouplist);
-                                                System.out.println("total group: " + total);
-                                                System.out.println("cg " + vals[1] + " by " + this.username + " successed.");
-                                                out.println("SUCCESS cg");
-                                                out.flush();
-                                            } else {
-                                                System.out.println("cg " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL cg");
-                                                out.flush();
-                                            }
-                                        }
-                                        
-                                        // param GM <groupName> <message> ; group message
-                                        if (input.split(" ")[0].toLowerCase().equals("gm") == true) {
-                                            String[] vals = input.split(" ");
-                                            
-                                            boolean exist = false;
-                                            
-                                            for(Pair<String, String> selGroup : _grouplist) {
-                                                if (selGroup.getSecond().equals(this.username)) {
-                                                    exist = true;
-                                                }
-                                            }
-                                            
-                                            if (exist == true) {
-                                                for(Pair<String, String> selGroup : _grouplist) {
+
+                                            // param CG <groupName> ; create group
+                                            if (input.split(" ")[0].toLowerCase().equals("cg") == true) {
+                                                String[] vals = input.split(" ");
+
+                                                boolean exist = false;
+
+                                                for(Pair<String, String> selGroup : _grouplist) {   // iterasi seluruh nama grup, jika grup sudah ada, tandai ada (exist)
                                                     if (selGroup.getFirst().equals(vals[1])) {
-                                                        for(Pair<Socket, String> cur : _loginlist) {
-                                                            if (cur.getSecond().equals(selGroup.getSecond()) && !cur.getFirst().equals(socket)) {
-                                                                PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
-                                                                String messageOut = "";
-                                                                for (int j = 2; j<vals.length; j++) {
-                                                                    messageOut += vals[j] + " ";
+                                                        exist = true;
+                                                    }
+                                                }
+
+                                                // jika nggak ada, buatkan grup baru
+                                                if(exist == false) {
+                                                    Group group = new Group();
+                                                    int total = group.updateGroup(vals[1], this.username, _grouplist);
+                                                    System.out.println("total group: " + total);
+                                                    System.out.println("cg " + vals[1] + " by " + this.username + " successed.");
+                                                    sig = Main.toHexString(signature.GenerateSignature("SUCCESS cg"));
+                                                    concate = "SUCCESS cg" + " " + sig;
+                                                } else {
+                                                    System.out.println("cg " + vals[1] + " by " + this.username + " failed.");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL cg"));
+                                                    concate = "FAIL cg" + " " + sig;
+                                                }
+                                                out.println(concate);
+                                                out.flush();
+                                            }
+
+                                            // param GM <groupName> <message> ; group message
+                                            if (input.split(" ")[0].toLowerCase().equals("gm") == true) {
+                                                String[] vals = input.split(" ");
+
+                                                boolean exist = false;
+
+                                                for(Pair<String, String> selGroup : _grouplist) {
+                                                    if (selGroup.getSecond().equals(this.username)) {
+                                                        exist = true;
+                                                    }
+                                                }
+
+                                                if (exist == true) {
+                                                    for(Pair<String, String> selGroup : _grouplist) {
+                                                        if (selGroup.getFirst().equals(vals[1])) {
+                                                            for(Pair<Socket, String> cur : _loginlist) {
+                                                                if (cur.getSecond().equals(selGroup.getSecond()) && !cur.getFirst().equals(socket)) {
+                                                                    PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
+                                                                    String messageOut = "";
+                                                                    for (int j = 2; j<vals.length - 1; j++) {
+                                                                        messageOut += vals[j] + " ";
+                                                                    }
+                                                                    System.out.println(this.username + " to " + vals[1] + " group: " + messageOut);
+                                                                    sig = Main.toHexString(signature.GenerateSignature(this.username + " @ " + vals[1] + " group: " + messageOut));
+                                                                    concate = this.username + " @ " + vals[1] + " group: " + messageOut + " " + sig;
+                                                                    outDest.println (concate);
+                                                                    out.println (concate);
+                                                                    outDest.flush();
+                                                                    out.flush();
                                                                 }
-                                                                System.out.println(this.username + " to " + vals[1] + " group: " + messageOut);
-                                                                /*
-                                                                    dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                                */
-                                                                outDest.println (this.username + " @ " + vals[1] + " group: " + messageOut);
-                                                                out.println     (this.username + " @ " + vals[1] + " group: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
-                                                                outDest.flush();
-                                                                out.flush();
                                                             }
                                                         }
                                                     }
-                                                }
-                                            } else {
-                                                System.out.println("gm to " + vals[1] + " by " + this.username + " failed.");
-                                                out.println("FAIL gm");
-                                                out.flush();
-                                            }
-                                        }
-                                        
-                                        // param BM <message> ; broadcast message - karena broadcast jadi mungkin tidak perlu enkripsi (?) tp gakpapa juga buat kerahasiaan antar anggota
-                                        if (input.split(" ")[0].toLowerCase().equals("bm") == true) {
-                                            String[] vals = input.split(" ");
-                                            
-                                            for(Pair<Socket, String> cur : _loginlist) {
-                                                if (!cur.getFirst().equals(socket)) {
-                                                    PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
-                                                    String messageOut = "";
-                                                    for (int j = 1; j<vals.length; j++) {
-                                                        messageOut += vals[j] + " ";
-                                                    }
-                                                    System.out.println(this.username + " to alls: " + messageOut);
-                                                    /*
-                                                        dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                    */
-                                                    outDest.println (this.username + " <BROADCAST>: " + messageOut);
-                                                    out.println     (this.username + " <BROADCAST>: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
-                                                    outDest.flush();
+                                                } else {
+                                                    System.out.println("gm to " + vals[1] + " by " + this.username + " failed.");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL gm"));
+                                                    concate = "FAIL gm" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
                                                 }
                                             }
+
+                                            // param BM <message> ; broadcast message - karena broadcast jadi mungkin tidak perlu enkripsi (?) tp gakpapa juga buat kerahasiaan antar anggota
+                                            if (input.split(" ")[0].toLowerCase().equals("bm") == true) {
+                                                String[] vals = input.split(" ");
+
+                                                for(Pair<Socket, String> cur : _loginlist) {
+                                                    if (!cur.getFirst().equals(socket)) {
+                                                        PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
+                                                        String messageOut = "";
+                                                        for (int j = 1; j<vals.length - 1; j++) {
+                                                            messageOut += vals[j] + " ";
+                                                        }
+                                                        System.out.println(this.username + " to alls: " + messageOut);
+                                                        sig = Main.toHexString(signature.GenerateSignature(this.username + " <BROADCAST>: " + messageOut));
+                                                        concate = this.username + " <BROADCAST>: " + messageOut + " " + sig;
+                                                        outDest.println (concate);
+                                                        out.println (concate);
+                                                        outDest.flush();
+                                                        out.flush();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else{
+                                            out.println("Your message isn't valid");
+                                            out.flush();
                                         }
 				}
 			}
