@@ -190,7 +190,7 @@ public class RSA_try2 {
       }
       
       // paling panjang 117 karakter
-      final String originalText = "*01* LOGIN rahmat rahmat";
+      final String originalText = "tes enkrip tes enkrip tes enkrip tes enkrip tes enkrip tes enkrip tes enkrip tes enkrip ";
       ObjectInputStream inputStream = null;
 
       // Encrypt the string using the public key
