@@ -22,17 +22,14 @@ public class Key {
     // konstruktor 1
     Key() {
         _keylist.clear();
-//        _keylist.add(new Pair("rahmat", null));
-//        _keylist.add(new Pair("gian", null));
-//        _keylist.add(new Pair("kevin", null));
     }
     
     // konstruktor 2
     Key(ArrayList<Pair<String,String>> _keylist) {
         this._keylist.clear();
-        for (int i = 0; i<_keylist.size(); i++) {
-            this._keylist.add(new Pair(_keylist.get(i).getFirst(), null));
-        }
+//        for (int i = 0; i<_keylist.size(); i++) {
+//            this._keylist.add(new Pair(_keylist.get(i).getFirst(), null));
+//        }
     }
     
     public ArrayList<Pair<String,PublicKey>> getKeyList() {

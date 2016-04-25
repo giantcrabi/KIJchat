@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 
-import org.apache.commons.codec.binary.Base64; 
+import org.apache.commons.codec.binary.Base64;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -23,7 +23,9 @@ import org.apache.commons.codec.binary.Base64;
 public class Client implements Runnable {
 
 	private Socket socket;  //MAKE SOCKET INSTANCE VARIABLE
-        private KeyPair _clientkey;
+        private static KeyPair _clientkey;
+        
+        private boolean isLogin = false;
         
         // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
@@ -43,12 +45,12 @@ public class Client implements Runnable {
                     Scanner in = new Scanner(socket.getInputStream());  //GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
                     PrintWriter out = new PrintWriter(socket.getOutputStream());    //GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
                     
-                    // pembuatan key RSA, lalu public key dikirimkan ke server
-                    _clientkey = rsa.generateKey();
-
-                    // mengirimkan public key ke server + encode public Key ke string
-                    String publicK = Base64.encodeBase64String(_clientkey.getPublic().getEncoded());
-                    out.println(publicK);
+//                    // pembuatan key RSA, lalu public key dikirimkan ke server
+//                    _clientkey = rsa.generateKey();
+//
+//                    // mengirimkan public key ke server + encode public Key ke string
+//                    String publicK = Base64.encodeBase64String(_clientkey.getPublic().getEncoded());
+//                    out.println(publicK);
                     
                     
                     
@@ -66,7 +68,7 @@ public class Client implements Runnable {
 //                    System.out.println("Public Key server :\n" + clientPrivateKey.toString());
 //                    System.out.println("a");
                     
-                    Read reader = new Read(in, log);
+                    Read reader = new Read(in, out, log, _clientkey);
 
                     Thread tr = new Thread(reader);
                     tr.start();

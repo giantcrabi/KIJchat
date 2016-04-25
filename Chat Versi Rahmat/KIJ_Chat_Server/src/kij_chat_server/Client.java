@@ -1,5 +1,6 @@
 package kij_chat_server;
 
+import java.awt.Point;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Collections;
 
 
 
@@ -72,7 +74,8 @@ public class Client implements Runnable{
 		{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
-			
+                        
+//                        old
 //                        // melakukan pembuatan key
 //                        KeyPair _clientkey = rsa.generateKey();
 //                        this._keylist.add(new Pair(this.username, _clientkey));
@@ -81,13 +84,20 @@ public class Client implements Runnable{
 //                        String publicK = Base64.encodeBase64String(_clientkey.getPrivate().getEncoded());
 //                        out.println(publicK);
                         
-                        // menerima public key client + decode string ke public key
-                        String publicKeyString = in.nextLine();
-                        byte[] publicBytes = Base64.decodeBase64(publicKeyString);
-                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
-                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                        _clientPublicKey = keyFactory.generatePublic(keySpec);
-                        System.out.println("New public key recieved :\n" + _clientPublicKey.toString());
+//                        new
+//                        // menerima public key client + decode string ke public key
+//                        String publicKeyString = in.nextLine();
+//                        byte[] publicBytes = Base64.decodeBase64(publicKeyString);
+//                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+//                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//                        _clientPublicKey = keyFactory.generatePublic(keySpec);
+//                        System.out.println("New public key recieved :\n" + _clientPublicKey.toString());
+                        
+//                        // membuat dan memasukkan pair ke keylist
+//                        this._keylist.add(new Pair(this.username, this._clientPublicKey));
+                        
+//                        // tes; print array list keylist
+//                        System.out.println("Keylist :\n" + _keylist.toString());
 
 			while (true)//WHILE THE PROGRAM IS RUNNING
 			{		
@@ -115,7 +125,7 @@ public class Client implements Runnable{
                                                     this.login = true;
                                                     System.out.println("Users count: " + this._loginlist.size());
                                                     out.println("SUCCESS login");
-                                                    
+                                                    out.flush();
                                                     /* 
                                                         jika sesuai diskusi, maka KEY pertama akan dikirimkan disini dengan kerangka kasar sbb:
                                                         out.println("*01*" + KEY);
@@ -123,7 +133,22 @@ public class Client implements Runnable{
                                                         message tersebut dianggap mengandung key dan akan langsung disimpan ke variable di client tanpa di print ke cmd.
                                                         else, jika message dari server tidak mengandung token penting, maka langsung ditampilkan
                                                     */
-                                                    out.flush();
+                                                    
+                                                    // menerima public key client + decode string ke public key
+                                                    String publicKeyString = in.nextLine();
+                                                    byte[] publicBytes = Base64.decodeBase64(publicKeyString);
+                                                    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                                                    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                                                    _clientPublicKey = keyFactory.generatePublic(keySpec);
+                                                    System.out.println("New public key recieved :\n" + _clientPublicKey.toString());
+                                                    
+                                                    // membuat dan memasukkan pair ke keylist
+                                                    this._keylist.add(new Pair(this.username, this._clientPublicKey));
+                                                    
+//                                                    _keylist.removeAll(Collections.singleton(null));
+                                                    // tes; print array list keylist
+                                                    System.out.println("Keylist :\n" + _keylist.toString());
+                                                    
                                                 } else {
                                                     out.println("FAIL login");
                                                     out.flush();
@@ -282,6 +307,8 @@ public class Client implements Runnable{
                                             
                                             boolean exist = false;
                                             
+                                            _keylist.remove(0);
+                                            _keylist.remove(0);
                                             
                                             // mendapatkan socket yang sesuai
                                             for(Pair<String, PublicKey> cur : _keylist) {
@@ -290,7 +317,8 @@ public class Client implements Runnable{
                                                     String publicK = "[EN]";    // informasikan jika string merupakan hasil encoding dari public key
                                                     publicK += Base64.encodeBase64String(cur.getSecond().getEncoded());  
                                                     System.out.println(this.username + " want " + vals[1] + " public key :\n" + publicK);
-                                                    out.println(vals[1] + " public key :\n" + publicK);     // kirim balik
+//                                                    out.println(vals[1] + " public key :\n" + publicK);     // kirim balik
+                                                    out.println(publicK);     // kirim balik
                                                     out.flush();
                                                     exist = true;
                                                 }

@@ -75,10 +75,10 @@ public class Write implements Runnable {
 				out.println(input);//SEND IT TO THE SERVER
 				out.flush();//FLUSH THE STREAM
                                 
+
                                 if (input.contains("logout")) {
                                     if (log.contains("true"))
                                         keepGoing = false;
-                                    
                                 }
 			}
 		}
