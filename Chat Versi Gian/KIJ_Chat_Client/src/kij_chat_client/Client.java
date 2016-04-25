@@ -32,7 +32,7 @@ public class Client implements Runnable {
                     Scanner chat = new Scanner(System.in);  //GET THE INPUT FROM THE CMD
                     Scanner in = new Scanner(socket.getInputStream());  //GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
                     PrintWriter out = new PrintWriter(socket.getOutputStream());    //GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
-                    int counter = in.nextInt();
+                    int counter = Integer.parseInt(in.nextLine());
                     String tempfilepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
                     String filepath = tempfilepath.replace('/','\\');
 
@@ -48,7 +48,7 @@ public class Client implements Runnable {
 
                     DigitalSignature signature = new DigitalSignature(counter);
                     
-                    Read reader = new Read(in, log);
+                    Read reader = new Read(signature, in, log);
 
                     Thread tr = new Thread(reader);
                     tr.start();

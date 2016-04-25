@@ -7,6 +7,7 @@ package kij_chat_client;
 
 import java.io.*;
 import java.security.*;
+import java.security.spec.*;
 
 /**
  *
@@ -19,6 +20,7 @@ public class DigitalSignature {
     private KeyPair pair;
     private PrivateKey privKey;
     private PublicKey pubKey;
+    private KeyFactory keyFactory;
     
     public DigitalSignature(int counter){
         try {
@@ -28,6 +30,7 @@ public class DigitalSignature {
             pair = keyGen.generateKeyPair(); //Generate the Pair of Keys(public & private key)
             privKey = pair.getPrivate();
             pubKey = pair.getPublic();
+            keyFactory = KeyFactory.getInstance("RSA");
 
             String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
             byte[] key = pubKey.getEncoded();
@@ -39,7 +42,7 @@ public class DigitalSignature {
         }
     }
     
-    public byte[] GenerateSignatures(String input) {
+    public byte[] GenerateSignature(String input) {
         byte[] realSig = null;
         try {
             Signature rsa = Signature.getInstance("SHA512withRSA"); //gets a Signature object for generating or verifying signatures using the RSA algorithm
@@ -52,4 +55,25 @@ public class DigitalSignature {
         }
         return realSig;
     }
+    
+    public boolean VerifySignature(String filepath, byte[] sigToVerify, String input){
+         boolean verifies = false;
+         try{
+             FileInputStream keyfis = new FileInputStream(filepath);
+             byte[] encKey = new byte[keyfis.available()];  
+             keyfis.read(encKey);
+             keyfis.close();
+             
+             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
+             PublicKey pubKeyServer = keyFactory.generatePublic(pubKeySpec);
+             
+             Signature sig = Signature.getInstance("SHA512withRSA");
+             sig.initVerify(pubKeyServer);
+             sig.update((input).getBytes());
+             verifies = sig.verify(sigToVerify);
+         } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+         }
+         return verifies;
+     }
 }

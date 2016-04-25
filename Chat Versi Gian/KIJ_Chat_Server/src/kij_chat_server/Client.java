@@ -43,6 +43,8 @@ public class Client implements Runnable{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
                         String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
+                        String sig;
+                        String concate;
                         
                         out.println(counter);
                         out.flush();
@@ -57,14 +59,23 @@ public class Client implements Runnable{
 //					out.flush();//FLUSH THE STREAM
                                         
                                         String[] inputs = input.split(" ");
-                                        StringJoiner joiner = new StringJoiner(" ");
-                                        for(int i = 0; i<inputs.length - 1; i++){
-                                            joiner.add(inputs[i]);
-                                        }
-                                        String realInput = joiner.toString();
+                                        String realInput;
+                                        boolean verified = false;
                                         
-                                        boolean verified = signature.VerifySignature(filepath, Main.toByteArray(inputs[inputs.length - 1]), realInput);
-                                        System.out.println("Verified: " + verified);
+                                        if(input.length() > 0){
+                                            if(inputs.length <= 2){
+                                                realInput = inputs[0];
+                                            }else{
+                                                StringJoiner joiner = new StringJoiner(" ");
+                                                for(int i = 0; i<inputs.length - 1; i++){
+                                                    joiner.add(inputs[i]);
+                                                }
+                                                realInput = joiner.toString();
+                                            }
+
+                                            verified = signature.VerifySignature(filepath, Main.toByteArray(inputs[inputs.length - 1]), realInput);
+                                            System.out.println("Verified: " + verified);
+                                        }
                                         
                                         if(verified == true){
                                             // param LOGIN <userName> <pass>
@@ -81,23 +92,19 @@ public class Client implements Runnable{
                                                         this.username = vals[1];
                                                         this.login = true;
                                                         System.out.println("Users count: " + this._loginlist.size());
-                                                        out.println("SUCCESS login");
-                                                        /* 
-                                                            jika sesuai diskusi, maka KEY pertama akan dikirimkan disini dengan kerangka kasar sbb:
-                                                            out.println("*01*" + KEY);
-                                                            dugaan saya, nanti di client terdapat if. jika terdapat token (katakan saja message daiwali dengan *01* maka
-                                                            message tersebut dianggap mengandung key dan akan langsung disimpan ke variable di client tanpa di print ke cmd.
-                                                            else, jika message dari server tidak mengandung token penting, maka langsung ditampilkan
-                                                        */
-                                                        out.flush();
+                                                        sig = Main.toHexString(signature.GenerateSignature("SUCCESS login"));
+                                                        concate = "SUCCESS login" + " " + sig;
                                                     } else {
-                                                        out.println("FAIL login");
-                                                        out.flush();
+                                                        sig = Main.toHexString(signature.GenerateSignature("FAIL login"));
+                                                        concate = "FAIL login" + " " + sig;
                                                     }
                                                 } else {
-                                                    out.println("FAIL login");
-                                                    out.flush();
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL login"));
+                                                    concate = "FAIL login" + " " + sig;
+                                                    
                                                 }
+                                                out.println(concate);
+                                                out.flush();
                                             }
 
                                             // param LOGOUT
@@ -107,12 +114,16 @@ public class Client implements Runnable{
                                                 if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
                                                     this._loginlist.remove(new Pair(this.socket, this.username));
                                                     System.out.println(this._loginlist.size());
-                                                    out.println("SUCCESS logout");
+                                                    sig = Main.toHexString(signature.GenerateSignature("SUCCESS logout"));
+                                                    concate = "SUCCESS logout" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
                                                     this.socket.close();
                                                     break;
                                                 } else {
-                                                    out.println("FAIL logout");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL logout"));
+                                                    concate = "FAIL logout" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
                                                 }
                                             }
@@ -127,7 +138,7 @@ public class Client implements Runnable{
                                                     if (cur.getSecond().equals(vals[1])) {
                                                         PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                         String messageOut = "";
-                                                        for (int j = 2; j<vals.length; j++) {
+                                                        for (int j = 2; j<vals.length - 1; j++) {
                                                             messageOut += vals[j] + " ";
                                                         }
                                                         System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
@@ -135,8 +146,10 @@ public class Client implements Runnable{
                                                         /*
                                                             dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
                                                         */
-                                                        outDest.println(this.username + ": " + messageOut);
-                                                        out.println(this.username + ": " + messageOut);     // kirim ke pengirim juga, untuk konfirmasi
+                                                        sig = Main.toHexString(signature.GenerateSignature(this.username + ": " + messageOut));
+                                                        concate = this.username + ": " + messageOut + " " + sig;
+                                                        outDest.println(concate);
+                                                        out.println(concate);     // kirim ke pengirim juga, untuk konfirmasi
                                                         outDest.flush();
                                                         out.flush();
                                                         exist = true;
@@ -146,7 +159,9 @@ public class Client implements Runnable{
                                                 // cmiiw jika message nya kosong, maka dikatakan failed
                                                 if (exist == false) {
                                                     System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
-                                                    out.println("FAIL pm");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL pm"));
+                                                    concate = "FAIL pm" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
                                                 }
                                             }
@@ -169,13 +184,15 @@ public class Client implements Runnable{
                                                     int total = group.updateGroup(vals[1], this.username, _grouplist);
                                                     System.out.println("total group: " + total);
                                                     System.out.println("cg " + vals[1] + " by " + this.username + " successed.");
-                                                    out.println("SUCCESS cg");
-                                                    out.flush();
+                                                    sig = Main.toHexString(signature.GenerateSignature("SUCCESS cg"));
+                                                    concate = "SUCCESS cg" + " " + sig;
                                                 } else {
                                                     System.out.println("cg " + vals[1] + " by " + this.username + " failed.");
-                                                    out.println("FAIL cg");
-                                                    out.flush();
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL cg"));
+                                                    concate = "FAIL cg" + " " + sig;
                                                 }
+                                                out.println(concate);
+                                                out.flush();
                                             }
 
                                             // param GM <groupName> <message> ; group message
@@ -197,15 +214,14 @@ public class Client implements Runnable{
                                                                 if (cur.getSecond().equals(selGroup.getSecond()) && !cur.getFirst().equals(socket)) {
                                                                     PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                                     String messageOut = "";
-                                                                    for (int j = 2; j<vals.length; j++) {
+                                                                    for (int j = 2; j<vals.length - 1; j++) {
                                                                         messageOut += vals[j] + " ";
                                                                     }
                                                                     System.out.println(this.username + " to " + vals[1] + " group: " + messageOut);
-                                                                    /*
-                                                                        dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                                    */
-                                                                    outDest.println (this.username + " @ " + vals[1] + " group: " + messageOut);
-                                                                    out.println     (this.username + " @ " + vals[1] + " group: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
+                                                                    sig = Main.toHexString(signature.GenerateSignature(this.username + " @ " + vals[1] + " group: " + messageOut));
+                                                                    concate = this.username + " @ " + vals[1] + " group: " + messageOut + " " + sig;
+                                                                    outDest.println (concate);
+                                                                    out.println (concate);
                                                                     outDest.flush();
                                                                     out.flush();
                                                                 }
@@ -214,7 +230,9 @@ public class Client implements Runnable{
                                                     }
                                                 } else {
                                                     System.out.println("gm to " + vals[1] + " by " + this.username + " failed.");
-                                                    out.println("FAIL gm");
+                                                    sig = Main.toHexString(signature.GenerateSignature("FAIL gm"));
+                                                    concate = "FAIL gm" + " " + sig;
+                                                    out.println(concate);
                                                     out.flush();
                                                 }
                                             }
@@ -227,15 +245,14 @@ public class Client implements Runnable{
                                                     if (!cur.getFirst().equals(socket)) {
                                                         PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                         String messageOut = "";
-                                                        for (int j = 1; j<vals.length; j++) {
+                                                        for (int j = 1; j<vals.length - 1; j++) {
                                                             messageOut += vals[j] + " ";
                                                         }
                                                         System.out.println(this.username + " to alls: " + messageOut);
-                                                        /*
-                                                            dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                        */
-                                                        outDest.println (this.username + " <BROADCAST>: " + messageOut);
-                                                        out.println     (this.username + " <BROADCAST>: " + messageOut); // kirim ke pengirim juga, untuk konfirmasi
+                                                        sig = Main.toHexString(signature.GenerateSignature(this.username + " <BROADCAST>: " + messageOut));
+                                                        concate = this.username + " <BROADCAST>: " + messageOut + " " + sig;
+                                                        outDest.println (concate);
+                                                        out.println (concate);
                                                         outDest.flush();
                                                         out.flush();
                                                     }
