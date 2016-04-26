@@ -69,11 +69,11 @@ public class Client implements Runnable{
 //					System.out.println("Client Said: " + input);//PRINT IT OUT TO THE SCREEN
 //					out.println("You Said: " + input);//RESEND IT TO THE CLIENT
 //					out.flush();//FLUSH THE STREAM
-                                        
+
                                         boolean verified = false;
                                         
                                         if(input.length() > 0){
-                                            String decryptedText = Main.toHexString(signature.Decrypt(input,counter));
+                                            String decryptedText = rc4.Decrypt(input);
                                             System.out.println(decryptedText);
 
                                             String[] inputs = decryptedText.split(" ");

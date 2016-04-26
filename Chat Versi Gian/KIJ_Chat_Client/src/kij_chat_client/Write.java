@@ -5,6 +5,7 @@
  */
 package kij_chat_client;
 
+import org.apache.commons.codec.binary.Base64;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -31,6 +32,7 @@ public class Write implements Runnable {
         boolean keepGoing = true;
         private DigitalSignature signature;
         private SecretKey secKey;
+        private RC4 rc4;
         ArrayList<String> log;
         /*
         KeyPair keyPair;
@@ -59,6 +61,7 @@ public class Write implements Runnable {
             this.log = log;
             this.signature = signature;
             this.secKey = secKey;
+            rc4 = new RC4(secKey);
         }
 	
 	@Override
@@ -76,7 +79,7 @@ public class Write implements Runnable {
                                 */
                                 
                                 String concate = input + " " + sig;
-                                String encrypted = Main.toHexString(signature.Encrypt(concate));
+                                String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
                                 
 				out.println(encrypted);//SEND IT TO THE SERVER
 				out.flush();//FLUSH THE STREAM
