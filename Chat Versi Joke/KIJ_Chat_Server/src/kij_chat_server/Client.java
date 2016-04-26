@@ -275,7 +275,12 @@ public class Client implements Runnable{
                                             }
                                         }
                                         else{
-                                            out.println("Your message isn't valid");
+//                                            out.println("Your message isn't valid");
+//                                            out.flush();
+                                            sig = Main.toHexString(signature.GenerateSignature("Your message isn't valid"));
+                                            concate = "FAIL logout" + " " + sig;
+                                            String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                            out.println(encrypted);
                                             out.flush();
                                         }
 				}
