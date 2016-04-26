@@ -9,6 +9,7 @@ package kij_chat_client;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.StringJoiner;
+import javax.crypto.SecretKey;
 
 /**
  *
@@ -20,13 +21,15 @@ public class Read implements Runnable {
         String input;
         boolean keepGoing = true;
         private DigitalSignature signature;
+        private SecretKey secKey;
         ArrayList<String> log;
 	
-	public Read(DigitalSignature signature, Scanner in, ArrayList<String> log)
+	public Read(SecretKey secKey, DigitalSignature signature, Scanner in, ArrayList<String> log)
 	{
 		this.in = in;
                 this.log = log;
                 this.signature = signature;
+                this.secKey = secKey;
 	}
     
         @Override

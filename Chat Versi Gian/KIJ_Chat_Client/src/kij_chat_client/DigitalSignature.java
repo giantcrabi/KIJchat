@@ -8,6 +8,9 @@ package kij_chat_client;
 import java.io.*;
 import java.security.*;
 import java.security.spec.*;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -21,6 +24,7 @@ public class DigitalSignature {
     private PrivateKey privKey;
     private PublicKey pubKey;
     private KeyFactory keyFactory;
+    private Cipher cipher;
     
     public DigitalSignature(int counter){
         try {
@@ -31,6 +35,7 @@ public class DigitalSignature {
             privKey = pair.getPrivate();
             pubKey = pair.getPublic();
             keyFactory = KeyFactory.getInstance("RSA");
+            cipher = Cipher.getInstance("RSA");
 
             String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
             byte[] key = pubKey.getEncoded();
@@ -41,6 +46,23 @@ public class DigitalSignature {
             System.err.println("Caught exception " + e.toString());
         }
     }
+    
+    PublicKey readPublicKey(){
+         String filepath = "../Public_Key_Directory/serverkey";
+         PublicKey pubKeyServer = null;
+         try{
+             FileInputStream keyfis = new FileInputStream(filepath);
+             byte[] encKey = new byte[keyfis.available()];  
+             keyfis.read(encKey);
+             keyfis.close();
+             
+             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
+             pubKeyServer = keyFactory.generatePublic(pubKeySpec);
+         } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+         }
+         return pubKeyServer;
+     }
     
     public byte[] GenerateSignature(String input) {
         byte[] realSig = null;
@@ -76,4 +98,28 @@ public class DigitalSignature {
          }
          return verifies;
      }
+    
+    public byte[] Encrypt(String input) {
+        byte[] encrypted = null;
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, privKey);
+            encrypted = cipher.doFinal(input.getBytes());
+        } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+        }
+        return encrypted;
+    }
+    
+    public SecretKey DecryptKey(byte[] encryptedKey) {
+        SecretKey secKey = null;
+        try {
+            PublicKey pubKeyServer = readPublicKey();
+            cipher.init(Cipher.DECRYPT_MODE, pubKeyServer);
+            byte[] key = cipher.doFinal(encryptedKey);
+            secKey = new SecretKeySpec(key, 0, key.length, "ARCFOUR");
+        } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+        }
+        return secKey;
+    }
 }

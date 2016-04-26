@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import javax.crypto.SecretKey;
 import javax.xml.bind.DatatypeConverter;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
@@ -19,6 +20,7 @@ public class Main {
     public static final ArrayList<Pair<String,String>> _userlist = user.getUserList();
     public static final Group group = new Group();
     public static final ArrayList<Pair<String,String>> _grouplist = group.getGroupList();
+    public static final ArrayList<Pair<Socket,SecretKey>> _keylist = new ArrayList<>();
     private static int counter = 0;
 
     public static void main(String[] args) throws IOException {
@@ -36,7 +38,7 @@ public class Main {
                             System.out.println("Client connected from " + s.getLocalAddress().getHostName());	//	TELL THEM THAT THE CLIENT CONNECTED
                             counter += 1;
                             
-                            Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature, counter);//CREATE A NEW CLIENT OBJECT
+                            Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature, counter, _keylist);//CREATE A NEW CLIENT OBJECT
                             Thread t = new Thread(chat);//MAKE A NEW THREAD
                             t.start();//START THE THREAD
                     }

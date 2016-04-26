@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.crypto.SecretKey;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -32,7 +33,10 @@ public class Client implements Runnable {
                     Scanner chat = new Scanner(System.in);  //GET THE INPUT FROM THE CMD
                     Scanner in = new Scanner(socket.getInputStream());  //GET THE CLIENTS INPUT STREAM (USED TO READ DATA SENT FROM THE SERVER)
                     PrintWriter out = new PrintWriter(socket.getOutputStream());    //GET THE CLIENTS OUTPUT STREAM (USED TO SEND DATA TO THE SERVER)
+                    
                     int counter = Integer.parseInt(in.nextLine());
+                    byte[] encryptedKey = Main.toByteArray(in.nextLine());
+                    
                     String tempfilepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
                     String filepath = tempfilepath.replace('/','\\');
 
@@ -47,13 +51,16 @@ public class Client implements Runnable {
 //                    }
 
                     DigitalSignature signature = new DigitalSignature(counter);
+                    SecretKey secKey = signature.DecryptKey(encryptedKey);
                     
-                    Read reader = new Read(signature, in, log);
+                    System.out.println(Main.toHexString(secKey.getEncoded()));
+                    
+                    Read reader = new Read(secKey, signature, in, log);
 
                     Thread tr = new Thread(reader);
                     tr.start();
 
-                    Write writer = new Write(signature, chat, out, log);
+                    Write writer = new Write(secKey, signature, chat, out, log);
 
                     Thread tw = new Thread(writer);
                     tw.start();

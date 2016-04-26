@@ -8,6 +8,7 @@ package kij_chat_client;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.crypto.SecretKey;
 /*
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -29,6 +30,7 @@ public class Write implements Runnable {
         private PrintWriter out;
         boolean keepGoing = true;
         private DigitalSignature signature;
+        private SecretKey secKey;
         ArrayList<String> log;
         /*
         KeyPair keyPair;
@@ -51,11 +53,12 @@ public class Write implements Runnable {
 	}
         */
         
-        public Write(DigitalSignature signature, Scanner chat, PrintWriter out, ArrayList<String> log){
+        public Write(SecretKey secKey, DigitalSignature signature, Scanner chat, PrintWriter out, ArrayList<String> log){
             this.chat = chat;
             this.out = out;
             this.log = log;
             this.signature = signature;
+            this.secKey = secKey;
         }
 	
 	@Override
@@ -73,8 +76,9 @@ public class Write implements Runnable {
                                 */
                                 
                                 String concate = input + " " + sig;
+                                String encrypted = Main.toHexString(signature.Encrypt(concate));
                                 
-				out.println(concate);//SEND IT TO THE SERVER
+				out.println(encrypted);//SEND IT TO THE SERVER
 				out.flush();//FLUSH THE STREAM
                                 
                                 if (input.contains("logout")) {

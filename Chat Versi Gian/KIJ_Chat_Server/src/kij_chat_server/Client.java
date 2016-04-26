@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.StringJoiner;
+import javax.crypto.SecretKey;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -19,20 +20,24 @@ public class Client implements Runnable{
         private boolean login = false;  // jika sudah login, true
         private DigitalSignature signature;
         private int counter;
+        private RC4 rc4;
         
         private ArrayList<Pair<Socket,String>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
+        private ArrayList<Pair<Socket,SecretKey>> _keylist;
 	
 	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, 
-                DigitalSignature signature, int counter)
+                DigitalSignature signature, int counter, ArrayList<Pair<Socket,SecretKey>> _keylist)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
+                this._keylist = _keylist;
                 this.signature = signature;
                 this.counter = counter;
+                rc4 = new RC4();
 	}
 	
 	@Override
@@ -42,11 +47,18 @@ public class Client implements Runnable{
 		{
 			Scanner in = new Scanner(socket.getInputStream());//GET THE SOCKETS INPUT STREAM (THE STREAM THAT YOU WILL GET WHAT THEY TYPE FROM)
 			PrintWriter out = new PrintWriter(socket.getOutputStream());//GET THE SOCKETS OUTPUT STREAM (THE STREAM YOU WILL SEND INFORMATION TO THEM FROM)
-                        String filepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
                         String sig;
                         String concate;
                         
+                        SecretKey secKey = rc4.GenerateSymKey();
+                        System.out.println(Main.toHexString(secKey.getEncoded()));
+                        this._keylist.add(new Pair(this.socket, secKey));
+                        
+                        String encryptedKey = Main.toHexString(signature.EncryptKey(secKey));
+                        
                         out.println(counter);
+                        out.flush();
+                        out.println(encryptedKey);
                         out.flush();
 			
 			while (true)//WHILE THE PROGRAM IS RUNNING
@@ -58,11 +70,15 @@ public class Client implements Runnable{
 //					out.println("You Said: " + input);//RESEND IT TO THE CLIENT
 //					out.flush();//FLUSH THE STREAM
                                         
-                                        String[] inputs = input.split(" ");
-                                        String realInput;
                                         boolean verified = false;
                                         
                                         if(input.length() > 0){
+                                            String decryptedText = Main.toHexString(signature.Decrypt(input,counter));
+                                            System.out.println(decryptedText);
+
+                                            String[] inputs = decryptedText.split(" ");
+                                            String realInput;
+                                            
                                             if(inputs.length <= 2){
                                                 realInput = inputs[0];
                                             }else{
@@ -73,10 +89,10 @@ public class Client implements Runnable{
                                                 realInput = joiner.toString();
                                             }
 
-                                            verified = signature.VerifySignature(filepath, Main.toByteArray(inputs[inputs.length - 1]), realInput);
+                                            verified = signature.VerifySignature(Main.toByteArray(inputs[inputs.length - 1]), realInput, counter);
                                             System.out.println("Verified: " + verified);
                                         }
-                                        
+                                                                                
                                         if(verified == true){
                                             // param LOGIN <userName> <pass>
                                             if (input.split(" ")[0].toLowerCase().equals("login") == true) {
