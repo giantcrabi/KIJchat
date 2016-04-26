@@ -7,6 +7,7 @@ package kij_chat_client;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -34,5 +35,16 @@ public class RC4 {
             System.err.println("Caught exception " + e.toString());
         }
         return encrypted;
+    }
+    
+    public String Decrypt(String input){
+        byte[] decrypted = null;
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, secKey);
+            decrypted = cipher.doFinal(Base64.decodeBase64(input));
+        } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+        }
+        return new String(decrypted);
     }
 }

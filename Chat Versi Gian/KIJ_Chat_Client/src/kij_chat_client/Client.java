@@ -53,7 +53,7 @@ public class Client implements Runnable {
                     DigitalSignature signature = new DigitalSignature(counter);
                     SecretKey secKey = signature.DecryptKey(encryptedKey);
                     
-                    System.out.println(Main.toHexString(secKey.getEncoded()));
+                    //System.out.println(Main.toHexString(secKey.getEncoded()));
                     
                     Read reader = new Read(secKey, signature, in, log);
 

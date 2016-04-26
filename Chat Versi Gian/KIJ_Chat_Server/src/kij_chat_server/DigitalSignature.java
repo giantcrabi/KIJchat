@@ -89,19 +89,7 @@ public class DigitalSignature {
          }
          return verifies;
      }
-     
-     public byte[] Decrypt(String input, int counter){
-         byte[] decrypted = null;
-         try{
-             PublicKey pubKeyClient = readPublicKey(counter);
-             cipher.init(Cipher.DECRYPT_MODE, pubKeyClient);
-             decrypted = cipher.doFinal(input.getBytes());
-         } catch (Exception e) {
-            System.err.println("Caught exception " + e.toString());
-         }
-         return decrypted;
-     }
-     
+          
      public byte[] EncryptKey(SecretKey secKey) {
         byte[] encrypted = null;
         try {

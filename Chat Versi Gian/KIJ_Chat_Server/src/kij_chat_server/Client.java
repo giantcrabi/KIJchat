@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.StringJoiner;
 import javax.crypto.SecretKey;
+import org.apache.commons.codec.binary.Base64;
 
 /** original ->http://www.dreamincode.net/forums/topic/262304-simple-client-and-server-chat-program/
  * 
@@ -19,22 +20,21 @@ public class Client implements Runnable{
         private String username;
         private boolean login = false;  // jika sudah login, true
         private DigitalSignature signature;
+        private SecretKey secKey;
         private int counter;
         private RC4 rc4;
         
-        private ArrayList<Pair<Socket,String>> _loginlist;
+        private ArrayList<Pair<Socket,Pair<String,SecretKey>>> _loginlist;
         private ArrayList<Pair<String,String>> _userlist;
         private ArrayList<Pair<String,String>> _grouplist;
-        private ArrayList<Pair<Socket,SecretKey>> _keylist;
 	
-	public Client(Socket s, ArrayList<Pair<Socket,String>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, 
-                DigitalSignature signature, int counter, ArrayList<Pair<Socket,SecretKey>> _keylist)
+	public Client(Socket s, ArrayList<Pair<Socket,Pair<String,SecretKey>>> _loginlist, ArrayList<Pair<String,String>> _userlist, ArrayList<Pair<String,String>> _grouplist, 
+                DigitalSignature signature, int counter)
 	{
 		socket = s;//INSTANTIATE THE SOCKET)
                 this._loginlist = _loginlist;
                 this._userlist = _userlist;
                 this._grouplist = _grouplist;
-                this._keylist = _keylist;
                 this.signature = signature;
                 this.counter = counter;
                 rc4 = new RC4();
@@ -50,11 +50,10 @@ public class Client implements Runnable{
                         String sig;
                         String concate;
                         
-                        SecretKey secKey = rc4.GenerateSymKey();
-                        System.out.println(Main.toHexString(secKey.getEncoded()));
-                        this._keylist.add(new Pair(this.socket, secKey));
+                        this.secKey = rc4.GenerateSymKey();
+                        //System.out.println(Main.toHexString(secKey.getEncoded()));
                         
-                        String encryptedKey = Main.toHexString(signature.EncryptKey(secKey));
+                        String encryptedKey = Main.toHexString(signature.EncryptKey(this.secKey));
                         
                         out.println(counter);
                         out.flush();
@@ -71,10 +70,10 @@ public class Client implements Runnable{
 //					out.flush();//FLUSH THE STREAM
 
                                         boolean verified = false;
+                                        String decryptedText = null;
                                         
                                         if(input.length() > 0){
-                                            String decryptedText = rc4.Decrypt(input);
-                                            System.out.println(decryptedText);
+                                            decryptedText = rc4.Decrypt(input);
 
                                             String[] inputs = decryptedText.split(" ");
                                             String realInput;
@@ -90,13 +89,13 @@ public class Client implements Runnable{
                                             }
 
                                             verified = signature.VerifySignature(Main.toByteArray(inputs[inputs.length - 1]), realInput, counter);
-                                            System.out.println("Verified: " + verified);
+                                            //System.out.println("Verified: " + verified);
                                         }
                                                                                 
                                         if(verified == true){
                                             // param LOGIN <userName> <pass>
-                                            if (input.split(" ")[0].toLowerCase().equals("login") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("login") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
     //                                            vals[0] = LOGIN
     //                                            vals[1] = username
@@ -104,7 +103,7 @@ public class Client implements Runnable{
 
                                                 if (this._userlist.contains(new Pair(vals[1], vals[2])) == true) {  // jika userlist mengandung username & password (jika match)
                                                     if (this.login == false) {
-                                                        this._loginlist.add(new Pair(this.socket, vals[1]));
+                                                        this._loginlist.add(new Pair(this.socket, new Pair(vals[1], this.secKey)));
                                                         this.username = vals[1];
                                                         this.login = true;
                                                         System.out.println("Users count: " + this._loginlist.size());
@@ -119,39 +118,42 @@ public class Client implements Runnable{
                                                     concate = "FAIL login" + " " + sig;
                                                     
                                                 }
-                                                out.println(concate);
+                                                String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                out.println(encrypted);
                                                 out.flush();
                                             }
 
                                             // param LOGOUT
-                                            if (input.split(" ")[0].toLowerCase().equals("logout") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("logout") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
-                                                if (this._loginlist.contains(new Pair(this.socket, this.username)) == true) {
-                                                    this._loginlist.remove(new Pair(this.socket, this.username));
+                                                if (this._loginlist.contains(new Pair(this.socket, new Pair(this.username, this.secKey))) == true) {
+                                                    this._loginlist.remove(new Pair(this.socket, new Pair(this.username, this.secKey)));
                                                     System.out.println(this._loginlist.size());
                                                     sig = Main.toHexString(signature.GenerateSignature("SUCCESS logout"));
                                                     concate = "SUCCESS logout" + " " + sig;
-                                                    out.println(concate);
+                                                    String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                    out.println(encrypted);
                                                     out.flush();
                                                     this.socket.close();
                                                     break;
                                                 } else {
                                                     sig = Main.toHexString(signature.GenerateSignature("FAIL logout"));
                                                     concate = "FAIL logout" + " " + sig;
-                                                    out.println(concate);
+                                                    String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                    out.println(encrypted);
                                                     out.flush();
                                                 }
                                             }
 
                                             // param PM <userName dst> <message>
-                                            if (input.split(" ")[0].toLowerCase().equals("pm") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("pm") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
                                                 boolean exist = false;
 
-                                                for(Pair<Socket, String> cur : _loginlist) {
-                                                    if (cur.getSecond().equals(vals[1])) {
+                                                for(Pair<Socket, Pair<String, SecretKey>> cur : _loginlist) {
+                                                    if (cur.getSecond().getFirst().equals(vals[1])) {
                                                         PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                         String messageOut = "";
                                                         for (int j = 2; j<vals.length - 1; j++) {
@@ -159,15 +161,11 @@ public class Client implements Runnable{
                                                         }
                                                         System.out.println(this.username + " to " + vals[1] + " : " + messageOut);
 
-                                                        /*
-                                                            dugaan saya, messageOut di enkripsi dulu dengan KEY, baru dikirim dengan println seperti dibawah
-                                                        */
                                                         sig = Main.toHexString(signature.GenerateSignature(this.username + ": " + messageOut));
                                                         concate = this.username + ": " + messageOut + " " + sig;
-                                                        outDest.println(concate);
-                                                        out.println(concate);     // kirim ke pengirim juga, untuk konfirmasi
+                                                        String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate,cur.getSecond().getSecond()));
+                                                        outDest.println(encrypted);
                                                         outDest.flush();
-                                                        out.flush();
                                                         exist = true;
                                                     }
                                                 }
@@ -177,14 +175,15 @@ public class Client implements Runnable{
                                                     System.out.println("pm to " + vals[1] + " by " + this.username + " failed.");
                                                     sig = Main.toHexString(signature.GenerateSignature("FAIL pm"));
                                                     concate = "FAIL pm" + " " + sig;
-                                                    out.println(concate);
+                                                    String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                    out.println(encrypted);
                                                     out.flush();
                                                 }
                                             }
 
                                             // param CG <groupName> ; create group
-                                            if (input.split(" ")[0].toLowerCase().equals("cg") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("cg") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
                                                 boolean exist = false;
 
@@ -207,13 +206,14 @@ public class Client implements Runnable{
                                                     sig = Main.toHexString(signature.GenerateSignature("FAIL cg"));
                                                     concate = "FAIL cg" + " " + sig;
                                                 }
-                                                out.println(concate);
+                                                String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                out.println(encrypted);
                                                 out.flush();
                                             }
 
                                             // param GM <groupName> <message> ; group message
-                                            if (input.split(" ")[0].toLowerCase().equals("gm") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("gm") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
                                                 boolean exist = false;
 
@@ -226,8 +226,8 @@ public class Client implements Runnable{
                                                 if (exist == true) {
                                                     for(Pair<String, String> selGroup : _grouplist) {
                                                         if (selGroup.getFirst().equals(vals[1])) {
-                                                            for(Pair<Socket, String> cur : _loginlist) {
-                                                                if (cur.getSecond().equals(selGroup.getSecond()) && !cur.getFirst().equals(socket)) {
+                                                            for(Pair<Socket, Pair<String, SecretKey>> cur : _loginlist) {
+                                                                if (cur.getSecond().getFirst().equals(selGroup.getSecond()) && !cur.getFirst().equals(socket)) {
                                                                     PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                                     String messageOut = "";
                                                                     for (int j = 2; j<vals.length - 1; j++) {
@@ -236,10 +236,9 @@ public class Client implements Runnable{
                                                                     System.out.println(this.username + " to " + vals[1] + " group: " + messageOut);
                                                                     sig = Main.toHexString(signature.GenerateSignature(this.username + " @ " + vals[1] + " group: " + messageOut));
                                                                     concate = this.username + " @ " + vals[1] + " group: " + messageOut + " " + sig;
-                                                                    outDest.println (concate);
-                                                                    out.println (concate);
+                                                                    String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate,cur.getSecond().getSecond()));
+                                                                    outDest.println(encrypted);
                                                                     outDest.flush();
-                                                                    out.flush();
                                                                 }
                                                             }
                                                         }
@@ -248,16 +247,17 @@ public class Client implements Runnable{
                                                     System.out.println("gm to " + vals[1] + " by " + this.username + " failed.");
                                                     sig = Main.toHexString(signature.GenerateSignature("FAIL gm"));
                                                     concate = "FAIL gm" + " " + sig;
-                                                    out.println(concate);
+                                                    String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate));
+                                                    out.println(encrypted);
                                                     out.flush();
                                                 }
                                             }
 
                                             // param BM <message> ; broadcast message - karena broadcast jadi mungkin tidak perlu enkripsi (?) tp gakpapa juga buat kerahasiaan antar anggota
-                                            if (input.split(" ")[0].toLowerCase().equals("bm") == true) {
-                                                String[] vals = input.split(" ");
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("bm") == true) {
+                                                String[] vals = decryptedText.split(" ");
 
-                                                for(Pair<Socket, String> cur : _loginlist) {
+                                                for(Pair<Socket, Pair<String, SecretKey>> cur : _loginlist) {
                                                     if (!cur.getFirst().equals(socket)) {
                                                         PrintWriter outDest = new PrintWriter(cur.getFirst().getOutputStream());
                                                         String messageOut = "";
@@ -267,10 +267,9 @@ public class Client implements Runnable{
                                                         System.out.println(this.username + " to alls: " + messageOut);
                                                         sig = Main.toHexString(signature.GenerateSignature(this.username + " <BROADCAST>: " + messageOut));
                                                         concate = this.username + " <BROADCAST>: " + messageOut + " " + sig;
-                                                        outDest.println (concate);
-                                                        out.println (concate);
+                                                        String encrypted = Base64.encodeBase64String(rc4.Encrypt(concate,cur.getSecond().getSecond()));
+                                                        outDest.println(encrypted);
                                                         outDest.flush();
-                                                        out.flush();
                                                     }
                                                 }
                                             }

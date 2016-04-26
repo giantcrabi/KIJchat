@@ -78,17 +78,10 @@ public class DigitalSignature {
         return realSig;
     }
     
-    public boolean VerifySignature(String filepath, byte[] sigToVerify, String input){
+    public boolean VerifySignature(byte[] sigToVerify, String input){
          boolean verifies = false;
          try{
-             FileInputStream keyfis = new FileInputStream(filepath);
-             byte[] encKey = new byte[keyfis.available()];  
-             keyfis.read(encKey);
-             keyfis.close();
-             
-             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
-             PublicKey pubKeyServer = keyFactory.generatePublic(pubKeySpec);
-             
+             PublicKey pubKeyServer = readPublicKey();
              Signature sig = Signature.getInstance("SHA512withRSA");
              sig.initVerify(pubKeyServer);
              sig.update((input).getBytes());
@@ -98,18 +91,7 @@ public class DigitalSignature {
          }
          return verifies;
      }
-    
-    public byte[] Encrypt(String input) {
-        byte[] encrypted = null;
-        try {
-            cipher.init(Cipher.ENCRYPT_MODE, privKey);
-            encrypted = cipher.doFinal(input.getBytes());
-        } catch (Exception e) {
-            System.err.println("Caught exception " + e.toString());
-        }
-        return encrypted;
-    }
-    
+        
     public SecretKey DecryptKey(byte[] encryptedKey) {
         SecretKey secKey = null;
         try {

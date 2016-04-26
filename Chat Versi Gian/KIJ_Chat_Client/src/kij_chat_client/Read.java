@@ -22,6 +22,7 @@ public class Read implements Runnable {
         boolean keepGoing = true;
         private DigitalSignature signature;
         private SecretKey secKey;
+        private RC4 rc4;
         ArrayList<String> log;
 	
 	public Read(SecretKey secKey, DigitalSignature signature, Scanner in, ArrayList<String> log)
@@ -30,6 +31,7 @@ public class Read implements Runnable {
                 this.log = log;
                 this.signature = signature;
                 this.secKey = secKey;
+                rc4 = new RC4(secKey);
 	}
     
         @Override
@@ -44,11 +46,15 @@ public class Read implements Runnable {
                                                                    //IF THE SERVER SENT US SOMETHING
                                         input = this.in.nextLine();
                                         
-                                        String[] inputs = input.split(" ");
-                                        String realInput = null;
                                         boolean verified = false;
+                                        String decryptedText = null;
+                                        String realInput = null;
                                         
                                         if(input.length() > 0){
+                                            decryptedText = rc4.Decrypt(input);
+
+                                            String[] inputs = decryptedText.split(" ");
+                                            
                                             if(inputs.length <= 2){
                                                 realInput = inputs[0];
                                             }else{
@@ -58,17 +64,17 @@ public class Read implements Runnable {
                                                 }
                                                 realInput = joiner.toString();
                                             }
-                                            
-                                            verified = signature.VerifySignature(filepath, Main.toByteArray(inputs[inputs.length - 1]), realInput);
-                                            System.out.println("Verified: " + verified);
+
+                                            verified = signature.VerifySignature(Main.toByteArray(inputs[inputs.length - 1]), realInput);
+                                            //System.out.println("Verified: " + verified);
                                         }
                                         
                                         if(verified == true){
                                             System.out.println(realInput);
-                                            if (input.split(" ")[0].toLowerCase().equals("success")) {
-                                                if (input.split(" ")[1].toLowerCase().equals("logout")) {
+                                            if (decryptedText.split(" ")[0].toLowerCase().equals("success")) {
+                                                if (decryptedText.split(" ")[1].toLowerCase().equals("logout")) {
                                                     keepGoing = false;
-                                                } else if (input.split(" ")[1].toLowerCase().equals("login")) {
+                                                } else if (decryptedText.split(" ")[1].toLowerCase().equals("login")) {
                                                     log.clear();
                                                     log.add("true");
                                                 }

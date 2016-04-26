@@ -36,6 +36,28 @@ public class RC4 {
         return secKey;
     }
     
+    public byte[] Encrypt(String input){
+        byte[] encrypted = null;
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, secKey);
+            encrypted = cipher.doFinal(input.getBytes());
+        } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+        }
+        return encrypted;
+    }
+    
+    public byte[] Encrypt(String input, SecretKey seckey){
+        byte[] encrypted = null;
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, seckey);
+            encrypted = cipher.doFinal(input.getBytes());
+        } catch (Exception e) {
+            System.err.println("Caught exception " + e.toString());
+        }
+        return encrypted;
+    }
+    
     public String Decrypt(String input){
         byte[] decrypted = null;
         try {
@@ -46,5 +68,4 @@ public class RC4 {
         }
         return new String(decrypted);
     }
-    
 }
