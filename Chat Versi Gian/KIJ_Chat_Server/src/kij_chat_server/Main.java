@@ -35,7 +35,7 @@ public class Main {
                             Socket s = server.accept();//ACCEPT SOCKETS(CLIENTS) TRYING TO CONNECT
 
                             System.out.println("Client connected from " + s.getLocalAddress().getHostName());	//	TELL THEM THAT THE CLIENT CONNECTED
-                            counter += 1;
+                            counter += 1; //jumlah socket yang terhubung
                             
                             Client chat = new Client(s, _loginlist, _userlist, _grouplist, signature, counter);//CREATE A NEW CLIENT OBJECT
                             Thread t = new Thread(chat);//MAKE A NEW THREAD

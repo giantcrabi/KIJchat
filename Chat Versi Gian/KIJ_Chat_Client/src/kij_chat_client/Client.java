@@ -16,7 +16,6 @@ public class Client implements Runnable {
 
 	private Socket socket;  //MAKE SOCKET INSTANCE VARIABLE
         
-        // use arraylist -> arraylist dapat diparsing as reference
         volatile ArrayList<String> log = new ArrayList<>();
         
 	public Client(Socket s)
@@ -40,16 +39,6 @@ public class Client implements Runnable {
                     String tempfilepath = "../Public_Key_Directory/clientkey" + Integer.toString(counter);
                     String filepath = tempfilepath.replace('/','\\');
 
-//                    while (true)//WHILE THE PROGRAM IS RUNNING
-//                    {						
-//                            String input = chat.nextLine();	//SET NEW VARIABLE input TO THE VALUE OF WHAT THE CLIENT TYPED IN
-//                            out.println(input);//SEND IT TO THE SERVER
-//                            out.flush();//FLUSH THE STREAM
-//
-//                            if(in.hasNext())//IF THE SERVER SENT US SOMETHING
-//                                    System.out.println(in.nextLine());//PRINT IT OUT
-//                    }
-
                     DigitalSignature signature = new DigitalSignature(counter);
                     SecretKey secKey = signature.DecryptKey(encryptedKey);
                     
@@ -65,7 +54,7 @@ public class Client implements Runnable {
                     Thread tw = new Thread(writer);
                     tw.start();
 
-//                        System.out.println(tr.isAlive());
+//                  System.out.println(tr.isAlive());
                     while (true) {
                         if (tr.isAlive() == false && tw.isAlive() == false) {
                             File clientfile = new File(filepath);

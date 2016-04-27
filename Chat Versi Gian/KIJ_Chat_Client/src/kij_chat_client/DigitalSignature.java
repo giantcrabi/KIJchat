@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
- * @author DELL
+ * @author Gian
  */
 public class DigitalSignature {
    

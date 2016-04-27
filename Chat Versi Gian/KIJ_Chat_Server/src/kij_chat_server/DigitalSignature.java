@@ -13,7 +13,7 @@ import javax.crypto.SecretKey;
 
 /**
  *
- * @author DELL
+ * @author Gian
  */
 public class DigitalSignature {
     
